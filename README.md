@@ -22,7 +22,7 @@ Wireguard走UDP协议，部分运营商会对UDP进行限速QOS处理使连接�
 
 开启Tunsafe的Pre/Post命令功能。在"Option"选择"Allow Pre/Post Commands"
 
-TunSafe选中client.conf, connect即可自动分流和串联udp2raw
+TunSafe选中client.conf, connect即可自动分流和串联udp2raw + udpspeeder
 
 # Wireguard配合游戏规则使用
 
