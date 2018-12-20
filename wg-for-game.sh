@@ -94,7 +94,7 @@ wireguard_install(){
 curl -o udp2raw https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/udp2raw
 curl -o speederv2 https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/speederv2
 chmod +x speederv2 udp2raw
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1194 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
+nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
 nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
 
 
@@ -103,7 +103,7 @@ cat > /etc/rc.d/init.d/udp<<-EOF
 #chkconfig: 2345 80 90
 #description:udp
 cd /etc/udp
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1194 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
+nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
 nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
 EOF
 
