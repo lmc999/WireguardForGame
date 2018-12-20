@@ -77,14 +77,6 @@ wireguard_install(){
     systemctl enable iptables 
     systemctl start iptables 
     iptables -F
-    iptables -X
-    iptables -t nat -F
-    iptables -t nat -X
-    iptables -t mangle -F
-    iptables -t mangle -X
-    iptables -P INPUT ACCEPT
-    iptables -P FORWARD ACCEPT
-    iptables -P OUTPUT ACCEPT
     service iptables save
     service iptables restart
     echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -92,18 +84,23 @@ wireguard_install(){
     mkdir /etc/udp
     cd /etc/udp
 curl -o udp2raw https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/udp2raw
-curl -o speederv2 https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/speederv2
-chmod +x speederv2 udp2raw
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
-nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
+chmod +x /etc/udp/udp2raw
+nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:1195 --raw-mode faketcp -a -k passwd >udp2raw.log 2>&1 &
+
+#下载批处理文件
+#curl -o /etc/wireguard/start.bat https://raw.githubusercontent.com/lmc999/Wireguard-anti-QOS/master/start.bat
+#curl -o /etc/wireguard/stop.bat https://raw.githubusercontent.com/lmc999/Wireguard-anti-QOS/master/stop.bat
+
+#修改start脚本ip
+#serverip=$(curl icanhazip.com)
+#sed -i "s/44.55.66.77/$serverip/" /etc/wireguard/start.bat
 
 cat > /etc/rc.d/init.d/udp<<-EOF
 #!/bin/sh
 #chkconfig: 2345 80 90
 #description:udp
 cd /etc/udp
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 0 >speeder.log 2>&1 &
-nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
+nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:1195 --raw-mode faketcp -a -k passwd >udp2raw.log 2>&1 &
 EOF
 
 chmod +x /etc/rc.d/init.d/udp
