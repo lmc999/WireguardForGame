@@ -26,7 +26,9 @@ TunSafe选中client.conf, connect即可自动分流和串联udp2raw
 
 # Wireguard配合游戏规则使用
 
-Wireguard Windows客户端Tunsafe支持添加路由规则，指定具体路由走wireguard代理，原理与SSTAP的游戏规则相同。使用方法是往Tunsafe配置文件中的AllowIPs参数添加游戏路由表。这里以PUBG亚服规则为例子，请参考sample.conf
+本项目搭建成功后默认是大陆白名单模式，可以直接进行游戏。
+
+但同时Wireguard的Windows客户端Tunsafe支持添加路由规则，指定具体路由走wireguard代理，原理与SSTAP的游戏规则相同。使用方法是往Tunsafe配置文件中的AllowIPs参数添加游戏路由表。这里以PUBG亚服规则为例子，请参考sample.conf
 
 目前已有成熟的游戏规则项目，项目原本为SSTAP服务，但其实只需将该项目中的对应游戏规则添加到Wireguard中照样可正常使用。
 
