@@ -84,7 +84,7 @@ wireguard_install(){
 	iptables -t mangle -X
 	iptables -P INPUT ACCEPT
 	iptables -P FORWARD ACCEPT
-	iptables -P OUTPUT ACCEPT
+	
     service iptables save
     service iptables restart
     echo 1 > /proc/sys/net/ipv4/ip_forward
