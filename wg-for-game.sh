@@ -134,7 +134,7 @@ EOF
 start_menu(){
     clear
     echo "1. 升级系统内核"
-    echo "2. 安装wireguard"
+    echo "2. 安装wireguard+udpspeeder+udp2raw"
     echo "3. 退出脚本"
     echo
     read -p "请输入数字:" num
