@@ -6,6 +6,12 @@ Wireguard走UDP协议，部分运营商会对UDP进行限速QOS处理使连接�
 
 本项目脚本根据Atrandys一键脚本修改，请支持原作者，项目地址：https://github.com/atrandys/wireguard
 
+# 事前准备
+
+电脑需安装好winpcap或npcap，下载地址请自行百度。
+
+目前脚本只支持centos7
+
 # 使用方法
 
 > bash <(curl -L -s https://raw.githubusercontent.com/lmc999/WireguardForGame/master/wg-for-game.sh)
