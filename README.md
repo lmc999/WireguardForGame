@@ -1,4 +1,4 @@
-# Wireguard-anti-QOS
+# WireguardForGame
 
 # 介绍
 
