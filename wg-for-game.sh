@@ -47,7 +47,7 @@ PostUp = start D:\software\TunSafe\bat\routes-up.bat
 PostDown = start D:\software\TunSafe\bat\routes-down.bat
 PostDown = start D:\software\TunSafe\bat\stop.bat
 DNS = 8.8.8.8
-MTU = 1250
+MTU = 1420
 [Peer]
 PublicKey = $s2
 Endpoint = 127.0.0.1:2099
@@ -119,7 +119,7 @@ PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j A
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
 ListenPort = 1195
 DNS = 8.8.8.8
-MTU = 1250
+MTU = 1420
 [Peer]
 PublicKey = $c2
 AllowedIPs = 10.0.0.2/32
