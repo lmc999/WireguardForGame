@@ -59,9 +59,9 @@ EOF
 
 #centos7安装wireguard
 wireguard_install(){
-    sudo curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
-    sudo yum install -y dkms gcc-c++ gcc-gfortran glibc-headers glibc-devel libquadmath-devel libtool systemtap systemtap-devel
-    sudo yum -y install wireguard-dkms wireguard-tools
+    #sudo curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
+    #sudo yum install -y dkms gcc-c++ gcc-gfortran glibc-headers glibc-devel libquadmath-devel libtool systemtap systemtap-devel
+    sudo yum -y install wireguard-tools
     mkdir /etc/wireguard
     cd /etc/wireguard
     wg genkey | tee sprivatekey | wg pubkey > spublickey
