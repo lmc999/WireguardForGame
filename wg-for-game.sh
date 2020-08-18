@@ -1,39 +1,34 @@
 #!/bin/bash
 
-#判断系统
-if [ ! -e '/etc/redhat-release' ]; then
-echo "仅支持centos7"
-exit
-fi
-if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
-echo "仅支持centos7"
-exit
-fi
+# =========================================================
+# System Request:CentOS 7+ 、Debian 8+、Ubuntu 16+
+# Origin Author:lmc999
+# Dscription: Wireguard游戏加速器一键脚本
+# Version: 2.0
+# Github:https://github.com/lmc999/WireguardForGame
+# TG交流群: https://t.me/gameaccelerate
+# =========================================================
 
+Green="\033[32m"
+Font="\033[0m"
+Blue="\033[33m"
 
+NIC="$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)"
 
-#更新内核
-update_kernel(){
-
-    sudo yum -y install epel-release
-    sed -i "0,/enabled=0/s//enabled=1/" /etc/yum.repos.d/epel.repo
-    yum remove -y kernel-devel
-    rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-    rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
-    yum --disablerepo="*" --enablerepo="elrepo-kernel" list available
-    yum -y --enablerepo=elrepo-kernel install kernel-ml
-    sed -i "s/GRUB_DEFAULT=saved/GRUB_DEFAULT=0/" /etc/default/grub
-    grub2-mkconfig -o /boot/grub2/grub.cfg
-    wget http://elrepo.org/linux/kernel/el7/x86_64/RPMS/kernel-ml-devel-4.18.12-1.el7.elrepo.x86_64.rpm
-    rpm -ivh kernel-ml-devel-4.18.12-1.el7.elrepo.x86_64.rpm
-    yum -y --enablerepo=elrepo-kernel install kernel-ml-devel
-    read -p "需要重启VPS，再次执行脚本选择安装wireguard，是否现在重启 ? [Y/n] :" yn
-	[ -z "${yn}" ] && yn="y"
-	if [[ $yn == [Yy] ]]; then
-		echo -e "${Info} VPS 重启中..."
-		reboot
-	fi
+rootness(){
+    if [[ $EUID -ne 0 ]]; then
+       echo -e "${Blue}此脚本必须以root用户运行!即将退出程序...${Font}" 1>&2
+       exit 1
+    fi
 }
+
+checkos(){
+    source /etc/os-release
+    OS=$ID
+    VERSION=$VERSION_ID
+}
+
+
 
 
 config_client(){
@@ -57,12 +52,31 @@ EOF
 
 }
 
-#centos7安装wireguard
+#Install Wireguard
 wireguard_install(){
-    sudo curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
-    sudo yum install -y dkms gcc-c++ gcc-gfortran glibc-headers glibc-devel libquadmath-devel libtool systemtap systemtap-devel
-    sudo yum -y install wireguard-dkms wireguard-tools
-    mkdir /etc/wireguard
+    # Install WireGuard tools and module
+	if [[ ${OS} == 'ubuntu' ]]; then
+		apt-get update
+		apt-get install -y wireguard iptables resolvconf qrencode
+	elif [[ ${OS} == 'debian' ]]; then
+		echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list
+        printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable
+        apt update
+        apt install -y wireguard qrencode iptables resolvconf
+	elif [[ ${OS} == 'centos' ]]; then
+		curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
+		yum -y install epel-release kernel kernel-devel kernel-headers
+		yum -y install wireguard-dkms wireguard-tools iptables qrencode
+		systemctl stop firewalld
+		systemctl disable firewalld
+	else
+		echo -e "${Blue}此脚本暂不支持你的操作系统，即将退出...${Font}"
+		exit 1
+	
+	fi
+	
+	# Configure Wireguard
+	mkdir /etc/wireguard
     cd /etc/wireguard
     wg genkey | tee sprivatekey | wg pubkey > spublickey
     wg genkey | tee cprivatekey | wg pubkey > cpublickey
@@ -71,52 +85,20 @@ wireguard_install(){
     c1=$(cat cprivatekey)
     c2=$(cat cpublickey)
     chmod 777 -R /etc/wireguard
-    systemctl stop firewalld
-    systemctl disable firewalld
-    yum install -y iptables-services 
-    systemctl enable iptables 
-    systemctl start iptables 
-    iptables -F
-    iptables -X
-    iptables -t nat -F
-    iptables -t nat -X
-    iptables -t mangle -F
-    iptables -t mangle -X
-    iptables -P INPUT ACCEPT
-    iptables -P FORWARD ACCEPT
-    iptables -P OUTPUT ACCEPT
-    service iptables save
-    service iptables restart
     echo 1 > /proc/sys/net/ipv4/ip_forward
     echo "net.ipv4.ip_forward = 1" > /etc/sysctl.conf
     mkdir /etc/udp
     cd /etc/udp
-curl -o udp2raw https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/udp2raw
-curl -o speederv2 https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/speederv2
-chmod +x speederv2 udp2raw
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
-nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
-
-
-cat > /etc/rc.d/init.d/udp<<-EOF
-#!/bin/sh
-#chkconfig: 2345 80 90
-#description:udp
-cd /etc/udp
-nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
-nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
-EOF
-
-chmod +x /etc/rc.d/init.d/udp
-chkconfig --add udp
-chkconfig udp on
-
-cat > /etc/wireguard/wg0.conf <<-EOF
+	curl -o udp2raw https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/udp2raw
+	curl -o speederv2 https://raw.githubusercontent.com/lmc999/OpenvpnForGames/master/speederv2
+	chmod +x speederv2 udp2raw
+	
+	cat > /etc/wireguard/wg0.conf <<-EOF
 [Interface]
 PrivateKey = $s1
 Address = 10.0.0.1/24 
-PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o $NIC -j MASQUERADE
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $NIC -j MASQUERADE
 ListenPort = 1195
 DNS = 8.8.8.8
 MTU = 1420
@@ -130,31 +112,64 @@ EOF
     systemctl enable wg-quick@wg0
 }
 
-#开始菜单
-start_menu(){
-    clear
-    echo "1. 升级系统内核"
-    echo "2. 安装wireguard+udpspeeder+udp2raw"
-    echo "3. 退出脚本"
+# Configure auto start on boot
+auto_start(){
+    echo -e "${Green}正在配置加速程序开机自启${Font}"
+    nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
+	nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 &
+    if [ "${OS}" == 'CentOS' ];then
+        sed -i '/exit/d' /etc/rc.d/rc.local
+        echo "nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
+nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 & " >> /etc/rc.d/rc.local
+        chmod +x /etc/rc.d/rc.local
+    elif [ -s /etc/rc.local ]; then
+        sed -i '/exit/d' /etc/rc.local
+        echo "nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
+nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 & " >> /etc/rc.local
+        chmod +x /etc/rc.local
+    else
+echo -e "${Green}检测到系统无rc.local自启，正在为其配置... ${Font} "
+echo "[Unit]
+Description=/etc/rc.local
+ConditionPathExists=/etc/rc.local
+ 
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+ 
+[Install]
+WantedBy=multi-user.target
+" > /etc/systemd/system/rc-local.service
+echo "#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+" > /etc/rc.local
+echo "nohup ./speederv2 -s -l0.0.0.0:9999 -r127.0.0.1:1195 -f2:4 --mode 0 --timeout 2 >speeder.log 2>&1 &
+nohup ./udp2raw -s -l0.0.0.0:9898 -r 127.0.0.1:9999  --raw-mode faketcp  -a -k passwd >udp2raw.log 2>&1 & " >> /etc/rc.local
+chmod +x /etc/rc.local
+systemctl enable rc-local >/dev/null 2>&1
+systemctl start rc-local >/dev/null 2>&1
+    fi
+    sleep 3
     echo
-    read -p "请输入数字:" num
-    case "$num" in
-    	1)
-	update_kernel
-	;;
-	2)
-	wireguard_install
-	;;
-	3)
-	exit 1
-	;;
-	*)
-	clear
-	echo "请输入正确数字"
-	sleep 5s
-	start_menu
-	;;
-    esac
+    echo -e "${Blue}Wireguard游戏加速程序安装并配置成功!${Font}"    
+    exit 0
 }
 
-start_menu
+rootness
+checkos
+wireguard_install
+auto_start
