@@ -11,7 +11,7 @@ Wireguard走UDP协议，部分运营商会对UDP进行限速QOS处理使连接�
 
 电脑需安装好winpcap或npcap，下载地址请自行百度。
 
-目前脚本只支持centos7
+目前脚本支持centos7+, debian8+, ubuntu16+
 
 # 使用方法
 
