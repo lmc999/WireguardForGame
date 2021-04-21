@@ -60,15 +60,14 @@ wireguard_install(){
 		apt install linux-headers-$(uname -r)
 		apt-get install -y wireguard iptables resolvconf qrencode
 	elif [[ ${OS} == 'debian' ]]; then
-		echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list
-        printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable
-        apt update
-	apt install linux-headers-$(uname -r)
-        apt install -y wireguard qrencode iptables resolvconf
+		apt update
+		apt install linux-headers-$(uname -r)
+		apt install -y wireguard qrencode iptables resolvconf
 	elif [[ ${OS} == 'centos' ]]; then
-		curl -Lo /etc/yum.repos.d/wireguard.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
-		yum -y install epel-release kernel kernel-devel kernel-headers
-		yum -y install wireguard-dkms wireguard-tools iptables qrencode
+		yum update
+		yum install epel-release elrepo-release -y
+		yum install yum-plugin-elrepo -y
+		yum install kmod-wireguard wireguard-tools iptables qrencode -y
 		systemctl stop firewalld
 		systemctl disable firewalld
 	else
